@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pose_to_yaml</name>
+  <version>0.0.1</version>
+  <description>Convert PoseStamped messages to relative pose YAML files</description>
+  <maintainer email="farzad.nozarian@dfki.de">Farzad Nozarian</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>Eigen3</depend>
+  <depend>yaml-cpp</depend>
+  <exec_depend>transforms3d</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+</package>
