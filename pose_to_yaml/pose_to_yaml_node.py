@@ -24,16 +24,21 @@ class PoseToYamlNode(Node):
         self.output_dir = self.get_parameter('output_dir').get_parameter_value().string_value
         self.topic_name = self.get_parameter('topic_name').get_parameter_value().string_value
         self.first_pose_yaml = self.get_parameter('first_pose_yaml').get_parameter_value().string_value
+        self.first_pose_received = False
 
         if self.first_pose_yaml:
             with open(self.first_pose_yaml, 'r') as file:
                 first_pose_yaml = yaml.load(file, Loader=yaml.FullLoader)
                 first_pose = PoseStamped()
-                first_pose.header.stamp.sec = first_pose_yaml['timestamp'].split('.')[0]
-                first_pose.header.stamp.nanosec = first_pose_yaml['timestamp'].split('.')[1]
-                first_pose.pose.position.x = first_pose_yaml['x']
-                first_pose.pose.position.y = first_pose_yaml['y']
-                first_pose.pose.position.z = first_pose_yaml['z']
+                first_pose.header.stamp.sec = int(first_pose_yaml['timestamp'].split('.')[0])
+                first_pose.header.stamp.nanosec = int(first_pose_yaml['timestamp'].split('.')[1])
+                first_pose.pose.position.x = float(first_pose_yaml['position']['x'])
+                first_pose.pose.position.y = float(first_pose_yaml['position']['y'])
+                first_pose.pose.position.z = float(first_pose_yaml['position']['z'])
+                first_pose.pose.orientation.x = first_pose_yaml['orientation']['x']
+                first_pose.pose.orientation.y = first_pose_yaml['orientation']['y']
+                first_pose.pose.orientation.z = first_pose_yaml['orientation']['z']
+                first_pose.pose.orientation.w = first_pose_yaml['orientation']['w']
                 self.first_pose = self.pose_to_matrix(first_pose.pose)
                 self.first_pose_received = True
                 self.get_logger().info(f"Loaded first pose: {self.first_pose.tolist()}")
@@ -44,7 +49,6 @@ class PoseToYamlNode(Node):
             self.pose_callback,
             10)
 
-        self.first_pose_received = False
         self.frame_count = 0
 
         if not os.path.exists(self.output_dir):
@@ -64,7 +68,11 @@ class PoseToYamlNode(Node):
             self.first_pose = current_pose
             self.first_pose_received = True
             with open(os.path.join(self.output_dir, 'map_origin.yaml'), 'w') as file:
-                yaml.dump({'x': msg.pose.position.x, 'y': msg.pose.position.y, 'z': msg.pose.position.z, 'timestamp': timestamp}, file)
+                map_origin = {'position': {'x': msg.pose.position.x, 'y': msg.pose.position.y, 'z': msg.pose.position.z},
+                              'orientation': {'x': msg.pose.orientation.x, 'y': msg.pose.orientation.y,
+                                              'z': msg.pose.orientation.z, 'w': msg.pose.orientation.w},
+                              'timestamp': timestamp}
+                yaml.dump(map_origin, file)
             self.get_logger().info(f"First pose written to {os.path.join(self.output_dir, 'first_pose.yaml')}")
             
         relative_pose = np.linalg.inv(self.first_pose) @ current_pose
